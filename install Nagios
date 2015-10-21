@@ -1,0 +1,81 @@
+1. yum install -y wget httpd php gcc glibc glibc-common gd gd-devel make net-snmp
+2. cd /tmp
+
+Download Nagios Core and Nagios Plugins Tarballs
+3. wget http://prdownloads.sourceforge.net/sourceforge/nagios/nagios-4.0.4.tar.gz
+4. wget http://nagios-plugins.org/download/nagios-plugins-2.0.tar.gz
+
+Adding the Nagios User and Group Next add the appropriate user and group for the Nagios process to run:
+5. useradd nagios
+6. groupadd nagcmd
+7. usermod -a -G nagcmd nagios
+
+Untar files
+8. tar zxvf nagios-4.0.4.tar.gz
+9. tar zxvf nagios-plugins-2.0.tar.gz
+
+Change to the new Nagios directory and install the packages:
+10. cd nagios-4.0.4
+11.  ./configure --with-command-group=nagcmd
+
+12. make all
+13. make install 
+14. make install-init
+- This installs the init script in /etc/rc.d/init.d
+15. make install-commandmode
+- This installs and configures permissions on the directory for holding the external command file
+16. make install-config
+- This installs sample config files in /usr/local/nagios/etc
+
+18. cp -R contrib/eventhandlers/ /usr/local/nagios/libexec/
+19. chown -R nagios:nagios/usr/local/nagios/libexec/eventhandlers
+20. /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+21. /etc/init.d/nagios start
+
+22.  /etc/init.d/httpd start
+
+Configure the Web Interface
+make install-webconf
+Create a Default User for Web Access. Add a default user for Web Interface Access:
+23. htpasswd –c   /usr/local/nagios/etc/htpasswd.users nagiosadmin
+Restart Apache to make the new settings take effect.
+service httpd restart
+Nagios Plugin Installation
+24] cd /tmp/nagios-plugins-2.0
+25] ./configure --with-nagios-user=nagios --with-nagios-group=nagios
+26] make
+27] make install
+
+Nagios Service Setup
+The following commands will register the Nagios daemon to be run upon system startup.
+chkconfig --add nagios
+chkconfig --level 35 nagios on
+chkconfig --add httpd
+chkconfig --level 35 httpd on
+
+Customize Configuration
+Edit the /usr/local/nagios/etc/objects/contacts.cfg config file with your favorite editor and change the email address associated with the nagiosadmin contact definition to the address you'd like to use for receiving alerts.
+vi /usr/local/nagios/etc/objects/contacts.cfg
+define contact{
+contact_name nagiosadmin ; Short name of user
+use generic-contact ; Inherit default values from generic-contact template (defined above)
+alias Nagios Admin ; Full name of user
+
+email username@mydomaininc.com ; <<***** CHANGE THIS TO YOUR EMAIL ADDRESS ******
+}
+
+
+ Modify SELinux Settings
+[root@master-ganglia-cm etc]# getenforce
+Disabled
+[root@master-ganglia-cm etc]# setenforce 0
+setenforce: SELinux is disabled
+
+To make this change permanent, you'll have to modify the settings in /etc/selinux/config and reboot.
+Instead of disabling SELinux or setting it to permissive mode, you can use the following command to run the CGIs under SELinux enforcing/targeted mode:
+chcon -R -t httpd_sys_content_t /usr/local/nagios/sbin/
+chcon -R -t httpd_sys_content_t /usr/local/nagios/share/
+Login to the Web Interface
+You should now be able to access the Nagios web interface at the URL below. You'll be prompted for the username (nagiosadmin) and password you specified earlier.
+http://<<host_name>>/nagios/
+
