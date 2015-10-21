@@ -1,0 +1,90 @@
+The Lighttpd is an open-source web server more optimized for speed-critical environments than common products while remaining standards-compliant, secure and flexible. Lighttpd is an excellent tool for small to medium sized web sites. It is a web server for Linux/UNIX and Windows operating systems platform and is an alternative to Apache web server
+
+wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+rpm -Uhv rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+yum install lighttpd
+
+Configure Lighttpd starts automatically when boot up :
+chkconfig lighttpd on
+
+Make sure server.use-ipv6 is set to “disable” in /etc/lighttpd/lighttpd.conf
+vi /etc/lighttpd/lighttpd.conf
+Start lighttpd Service 
+And got below error:
+[root@snn-kerberos lighttpd]# service lighttpd start
+Starting lighttpd: 2015-10-10 21:18:48: (server.c.722) couldn't set 'max filedescriptors' Permission denied
+[FAILED]
+[root@snn-kerberos lighttpd]# cat /proc/`ps ax | grep lighttpd | grep -v grep | awk -F " " '{print $1}'`/limits |grep "Max open files"
+
+mkdir -p /var/run/lighttpd
+chown lighttpd:lighttpd /var/run/lighttpd
+
+Make sure Port 80 is free
+Verify that Apache is running on a different port.
+[root@snn-kerberos vhosts.d]# service httpd status
+httpd: unrecognized service
+
+Or a better way to check is to see if any webserver us running on Port 80 as follows:
+[root@snn-kerberos vhosts.d]# netstat -tulpn | grep 80
+[root@snn-kerberos vhosts.d]#
+
+Verify Lighttpd config file syntax
+[root@snn-kerberos vhosts.d]# lighttpd -t -f /etc/lighttpd/lighttpd.conf
+Syntax OK
+[root@snn-kerberos vhosts.d]#
+
+Lighttpd checks : Check lighttpd is listening for connections
+[root@snn-kerberos vhosts.d]# netstat -tap |grep lighttpd
+[root@snn-kerberos vhosts.d]#
+
+Disable selinux
+temporarily by using command setenforce 0
+or permanently by keeping SELINUX=disabled in /etc/selinux/config
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+# enforcing - SELinux security policy is enforced.
+# permissive - SELinux prints warnings instead of enforcing.
+# disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of these two values:
+# targeted - Targeted processes are protected,
+# mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+
+[root@snn-kerberos ~]# service lighttpd restart
+Stopping lighttpd: [FAILED]
+Starting lighttpd: [ OK ]
+[root@snn-kerberos ~]#
+[root@snn-kerberos ~]# service lighttpd status
+lighttpd (pid 1533) is running...
+[root@snn-kerberos ~]#
+
+create first web page at location vi /srv/www/lighttpd/index.html
+[root@snn-kerberos ~]# cat /srv/www/lighttpd/index.html
+<html>
+<body> <h1> Hi there you got your server UP </h1></body>
+</html>
+[root@snn-kerberos ~]#
+
+Check if lighttpd is running on browser 
+Open http://192.168.1.169/ in the browser, you should see your test page which you just created.
+however I got error saying NO Page found 
+
+then I tuned off the firewalls using command 
+[root@snn-kerberos ~]# service iptables stop
+iptables: Flushing firewall rules: [ OK ]
+iptables: Setting chains to policy ACCEPT: filter [ OK ]
+iptables: Unloading modules: [ OK ]
+[root@snn-kerberos ~]#
+
+keep firewalls off on boot:
+[root@snn-kerberos ~]# chkconfig iptables off
+[root@snn-kerberos ~]#
+
+Now Check if lighttpd is running on browser 
+Open http://192.168.1.169/ in the browser, you should see your test page which you just created.
+
+And I got message from index.html just I had created 
+Hi there you got your server UP
