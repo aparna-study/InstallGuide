@@ -1,0 +1,187 @@
+Ganglia main components:
+
+ Ganglia Monitoring Daemon (gmond)
+It is a lightweight service that is installed on every machine you’d like to monitor.
+Gmond has four main responsibilities:
+
+Monitor changes in host state.
+Announce relevant changes.
+Listen to the state of all other ganglia nodes via a unicast or multicast channel.
+Answer requests for an XML description of the cluster state.
+Each gmond transmits in information in two different ways:
+
+Unicasting or Multicasting host state in external data representation (XDR) format using UDP messages.
+Sending XML over a TCP connection.
+ Ganglia Meta Daemon (gmetad)
+The ganglia meta daemon (gmetad) is a service that collects data from other gmetad and gmond sources and stores their state to disk in indexed round-robin databases. Gmetad provides a simple query mechanism for collecting specific information about groups of machines.
+
+Ganglia PHP Web Front-end
+The Ganglia web front-end provides a view of the gathered information via real-time dynamic web pages. Most importantly, it displays Ganglia data in a meaningful way for system administrators and computer users using PHP.
+
+Other component are:
+Gmetrics
+The ganglia metric tool is a commandline application that you can use to inject custom made metrics about hosts that are being monitored by ganglia. It has the ability to spoof messages as coming from a different host in case you want to capture and report metrics from a device where you don’t have gmond running (like a network or other embedded device).
+
+Gstat
+The ganglia stat tool is a commandline application that you can use to query a gmond for metric information directly.
+
+
+Create epel repo file to install ganglia
+
+[root@master-ganglia-cm ~]# wget http://mirror.pnl.gov/epel//6/x86_64/epel-release-6-8.noarch.rpm
+
+[root@master-ganglia-cm ~]#rpm -ivh epel-release-6-8.noarch.rpm
+
+Install gmetad , web , gmond, ganglia on a master node
+
+[root@master-ganglia-cm ~]# sudo yum install ganglia ganglia-gmetad ganglia-gmond ganglia-web
+
+Starting gmond daemon at boot:
+chkconfig --level 345 httpd on
+chkconfig --level 345 gmond on
+chkconfig --level 345 gmetad on
+
+Now there must be something in this gmond.cof file which will tell this gmond to send its metric data to our collector server gmond (master-ganglia-cm.Mydomain.net). So we need to have the below entries in gmond.conf file. changed only name in cluster and host=master-ganglia-cm.Mydomain.net where this is host where gmetad service is running.
+
+udp_send_channel {
+#bind_hostname = yes # Highly recommended, soon to be default.
+# This option tells gmond to use a source address
+# that resolves to the machine's hostname. Without
+# this, the metrics may appear to come from any
+# interface and the DNS names associated with
+# those IPs will be used to create the RRDs.
+mcast_join = 239.2.11.71
+host=master-ganglia-cm.Mydomain.net
+port = 8649
+ttl = 1
+}
+
+
+cluster {
+name = "my-cluster"
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+
+
+Started gmond daemon :
+[root@master-ganglia-cm ~]# sudo /sbin/service gmond start
+Starting GANGLIA gmond: [ OK ]
+
+Update configure this file where “master-ganglia-cm.Mydomain.net” would be your host on which you are running this service
+[root@master-ganglia-cm ~]# sudo vi /etc/gmetad.conf
+
+data_source "my-cluster" master-ganglia-cm.Mydomain.net:8649
+
+Starting gmetad daemon:
+[root@master-ganglia-cm ~]# sudo /sbin/service gmetad start
+Starting GANGLIA gmetad:
+
+
+Configure /etc/httpd/conf.d/ganglia.conf file for the following changes
+vi /etc/httpd/conf.d/ganglia.conf
+
+#
+# Ganglia monitoring system php web frontend
+#
+
+Alias /ganglia /usr/share/ganglia
+
+<Location /ganglia>
+Order deny,allow
+# Deny from all
+# Allow from 127.0.0.1
+# Allow from ::1
+# Allow from .example.com
+Allow from all
+</Location>
+~
+
+[root@master-ganglia-cm yum.repos.d]# /etc/init.d/httpd restart
+Stopping httpd: [ OK ]
+Starting httpd: httpd: apr_sockaddr_info_get() failed for master-ganglia-cm.Mydomain.net
+httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1 for ServerName
+[ OK ]
+[root@master-ganglia-cm yum.repos.d]#
+
+Install gmond daemon on all other node:
+
+[root@nn ~]# sudo yum install ganglia-gmond
+Loaded plugins: fastestmirror
+Determining fastest mirrors
+epel/metalink
+
+the above command will do the following things.
+
+this will install the gmond binary. this binary is located /usr/sbin/gmond
+You can create the default gmond configuration file with gmond binary.
+This will also install the gmond daemon which will continuously collect metrics from the machine.
+
+Now there must be something in this gmond.cof file which will tell this gmond to send its metric data to our collector server gmond (master-ganglia-cm.Mydomain.net). So we need to have the below entries in gmond.conf file.
+
+udp_send_channel {
+#bind_hostname = yes # Highly recommended, soon to be default.
+# This option tells gmond to use a source address
+# that resolves to the machine's hostname. Without
+# this, the metrics may appear to come from any
+# interface and the DNS names associated with
+# those IPs will be used to create the RRDs.
+mcast_join = 239.2.11.71
+host=master-ganglia-cm.Mydomain.net
+port = 8649
+ttl = 1
+}
+
+
+cluster {
+name = "my-cluster"
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+[root@nn ~]# /etc/init.d/gmond start
+Starting GANGLIA gmond: [ OK ]
+[root@nn ~]#
+
+sudo /sbin/chkconfig --levels 235 gmond on
+
+
+Accessing web UI
+when you hit url as http://host/ganglia in my case it's "http://192.168.1.161/ganglia"
+
+Error while accessing ganglia web UI
+Forbidden
+You don't have permission to access ganglia server
+
+Try editing file  /etc/sysconfig/selinux for following changes
+
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+# enforcing - SELinux security policy is enforced.
+# permissive - SELinux prints warnings instead of enforcing.
+# disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of these two values:
+# targeted - Targeted processes are protected,
+# mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+
+When you hit web url now if you'll get error as 
+
+There is error collecting ganglia data fsockopen error: permission denied
+
+Then check for logs in place /var/log/messages
+
+Oct 7 19:53:26 master-ganglia-cm /usr/sbin/gmond[1410]: update_ifdata(BO): 4.61168e+17 4.61168e+17 4.61168e+17 4.61168e+17 / 40.0001
+Oct 7 19:54:45 master-ganglia-cm /usr/sbin/gmetad[1828]: Please make sure that /var/lib/ganglia/rrds is owned by ganglia
+
+So change owner of /var/lib/ganglia/rrds to ganglia and you will see the following result when you hit url as http://host/ganglia in my case it's "http://192.168.1.161/ganglia"
+
+
+
+
