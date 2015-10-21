@@ -1,322 +1,591 @@
 
 Oozie prerequisite: jdk, database
 
+
+
+
 install mysql first and then install oozie server 
- 
+
+
+
 [root@hiveserver2-metastore ~]# sudo yum install oozie 
+
 Configuring Oozie to Use MySQL
 
 
+
+
+
 [root@hiveserver2-metastore ~]# mysql -u root -p
+
 Enter password:
-Welcome to the MySQL monitor.  Commands end with ; or \g.
+
+Welcome to the MySQL monitor. Commands end with ; or \g.
+
 Your MySQL connection id is 11
+
 Server version: 5.1.73 Source distribution
+
+
 
 Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
 
+
+
 Oracle is a registered trademark of Oracle Corporation and/or its
+
 affiliates. Other names may be trademarks of their respective
+
 owners.
+
+
 
 Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
+
+
 mysql> create database oozie;
+
 Query OK, 1 row affected (0.01 sec)
 
-mysql>  grant all privileges on oozie.* to 'oozie'@'hiveserver2-metastore.datadeity.net' identified by 'oozie';
+
+
+mysql> grant all privileges on oozie.* to 'oozie'@'hiveserver2-metastore.mydomain.net' identified by 'oozie';
+
 Query OK, 0 rows affected (0.00 sec)
+
+
 
 mysql> grant all privileges on oozie.* to 'oozie'@'%' identified by 'oozie';
+
 Query OK, 0 rows affected (0.00 sec)
 
+
+
 mysql> exit
+
 Bye
+
 [root@hiveserver2-metastore ~]#
+
+
+
 
 
 Configure Oozie to use MySQL. 
 
+
+
 Before
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.driver</name>
+
 <value>com.mysql.jdbc.Driver</value>
+
 <description>
+
 JDBC driver class.
+
 </description>
+
 </property>
 
 
 
+
+
+
+
 <property>
+
+
 
 <name>oozie.service.JPAService.jdbc.url</name>
 
+
+
 <value>jdbc:derby:${oozie.data.dir}/${oozie.db.schema.name}-db;create=true</value>
+
 <description>
+
 JDBC URL.
+
 </description>
+
 </property>
 
 
+
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.username</name>
+
 <value>sa</value>
+
 <description>
+
 DB user name.
+
 </description>
+
 </property>
 
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.password</name>
+
 <value> </value>
+
 <description>
+
+
+
 
 
 After:
+
 <property>
+
 <name>oozie.service.JPAService.create.db.schema</name>
+
 <value>false</value>
+
 <description>
+
 Creates Oozie DB.
+
 If set to true, it creates the DB schema if it does not exist. If the DB schema exists is a NOP.
+
 If set to false, it does not create the DB schema. If the DB schema does not exist it fails start up.
+
 </description>
+
 </property>
- 
+
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.driver</name>
+
 <value>com.mysql.jdbc.Driver</value>
+
 <description>
+
 JDBC driver class.
+
 </description>
+
 </property>
- 
+
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.url</name>
-<value>jdbc:mysql://hiveserver2-metastore.datadeity.net:3306/oozie</value>
+
+<value>jdbc:mysql://hiveserver2-metastore.mydomain.net:3306/oozie</value>
+
 <description>
+
 JDBC URL.
+
 </description>
+
 </property>
- 
+
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.username</name>
+
 <value>oozie</value>
+
 <description>
+
 DB user name.
+
 </description>
+
 </property>
- 
+
+
+
 <property>
+
 <name>oozie.service.JPAService.jdbc.password</name>
+
 <value>oozie</value>
+
 <description>
+
 DB user password.
- 
+
+
+
+
 
 IMPORTANT: if password is emtpy leave a 1 space string, the service trims the value,
+
 if empty Configuration assumes it is NULL.
+
 </description>
+
 </property>
 
 
- Add the MySQL JDBC driver JAR to Oozie.
+
+
+
+Add the MySQL JDBC driver JAR to Oozie.
+
 Copy or symlink the MySQL JDBC driver JAR into the /var/lib/oozie/ directory.
 
+
+
 Note:You must manually download the MySQL JDBC driver JAR file.
+
 ln -s /usr/share/java/mysql-connector-java.jar /var/lib/oozie/ 
 
+
+
 The Oozie database tool works in 2 modes: it can create the database, or it can produce an SQL script that a database administrator can run to create the database manually. If you use the tool to create the database schema, you must have the permissions needed to execute DDL operations.
+
 To run the Oozie database tool against the database:
+
 Important: This step must be done as the oozie Unix user, otherwise Oozie may fail to start or work properly because of incorrect file permissions.
+
+
 
 sudo -u oozie /usr/lib/oozie/bin/ooziedb.sh create -run
 
+
+
 you should see:
+
 Validate DB Connection
+
 DONE
+
 Check DB schema does not exist
+
 DONE
+
+
 
 Check OOZIE_SYS table does not exist
-DONE
-Create SQL schema
-DONE
-Create OOZIE_SYS table
-DONE
-Set MySQL MEDIUMTEXT flag
+
 DONE
 
+Create SQL schema
+
+DONE
+
+Create OOZIE_SYS table
+
+DONE
+
+Set MySQL MEDIUMTEXT flag
+
+DONE
+
+
+
 Oozie DB has been created for Oozie version '3.3.2-cdh4.7.1'
+
 The SQL commands have been written to: /tmp/ooziedb-6422488598198443788.sql
 
 
+
+
+
 To create the upgrade script:
+
 sudo -u oozie /usr/lib/oozie/bin/ooziedb.sh create -sqlfile oozie-create.sql
 
+
+
 Enabling the Oozie Web Console
+
 To enable Oozie's web console, you must download and add the ExtJS library to the Oozie server. If you have not already done this, proceed as follows.
+
+
 
 Step 1: Download the Library Download the ExtJS version 2.2 library from http://archive.cloudera.com/gplextras/misc/ext-2.2.zip and place it a convenient location.
 
+
+
 wget --no-cookies --no-check-certificate “ http://archive.cloudera.com/gplextras/misc/ext-2.2.zip"
+
+
 
 [root@hiveserver2-metastore ~]# wget http://archive.cloudera.com/gplextras/misc/ext-2.2.zip
 
+
+
 -- http://archive.cloudera.com/gplextras/misc/ext-2.2.zip
+
+
 
 Resolving archive.cloudera.com... 199.27.79.68
 
+
+
 Connecting to archive.cloudera.com|199.27.79.68|:80... connected.
+
+
 
 HTTP request sent, awaiting response... 200 OK
 
+
+
 Length: 6800612 (6.5M) [application/zip]
+
+
 
 Saving to: “ext-2.2.zip”
 
+
+
 100%[====>] 6,800,612 12.5M/s in 0.5s
+
+
 
 - “ext-2.2.zip” saved [6800612/6800612]
 
 
 
 
-Step 2: Install the Library
 
+
+
+
+
+ Install the Library
 Extract the ext-2.2.zip file into /var/lib/oozie.
-
-
 
 [root@hiveserver2-metastore oozie]# mv ext-2.2.zip /var/lib/oozie/
 
 [root@hiveserver2-metastore oozie]# unzip ext-2.2.zip
 
+
 Installing the Oozie ShareLib in Hadoop HDFS
 
-[root@nn ~]# sudo -u hdfs hadoop fs -mkdir  /user/oozie
+[root@nn ~]# sudo -u hdfs hadoop fs -mkdir /user/oozie
+
 [root@nn ~]# sudo -u hdfs hadoop fs -chown oozie:oozie /user/oozie
+
 [root@nn ~]# mkdir /tmp/ooziesharelib
+
 [root@nn ~]# cd /tmp/ooziesharelib
+
 [root@nn ooziesharelib]#
 
-copying file from one machine to another I'm copying this file from server to hdfs node
+copying file from one machine to another I'm copying this file from oozie server to hdfs node
 
 [root@hiveserver2-metastore ~]#
+
 [root@hiveserver2-metastore ~]# scp <localfile>username@tohostname:<remotefile>^C
+
 [root@hiveserver2-metastore ~]# scp /usr/lib/oozie/oozie-sharelib.tar.gz
+
 usage: scp [-1246BCpqrv] [-c cipher] [-F ssh_config] [-i identity_file]
-           [-l limit] [-o ssh_option] [-P port] [-S program]
-           [[user@]host1:]file1 ... [[user@]host2:]file2
+
+[-l limit] [-o ssh_option] [-P port] [-S program]
+
+[[user@]host1:]file1 ... [[user@]host2:]file2
+
 [root@hiveserver2-metastore ~]#
+
 [root@hiveserver2-metastore ~]# scp /usr/lib/oozie/oozie-sharelib.tar.gz root@192.168.1.162:/root
+
 The authenticity of host '192.168.1.162 (192.168.1.162)' can't be established.
+
 RSA key fingerprint is 18:7a:52:a6:f8:c8:4b:b7:cf:ae:83:77:d4:32:51:59.
+
 Are you sure you want to continue connecting (yes/no)? y
+
 Please type 'yes' or 'no': yes
+
 Warning: Permanently added '192.168.1.162' (RSA) to the list of known hosts.
+
 root@192.168.1.162's password:
-oozie-sharelib.tar.gz                                                                                                                                              100%   80MB  40.2MB/s   00:02
+
+oozie-sharelib.tar.gz 100% 80MB 40.2MB/s 00:02
+
 [root@hiveserver2-metastore ~]#
+
+
 
 Insalling Oozie share
 
 [root@nn ~]# tar -xvzf oozie-sharelib.tar.gz
 
 [root@nn ~]# tar -xvzf oozie-sharelib.tar.gz^C
+
 [root@nn ~]# sudo -u oozie hadoop fs -put share /user/oozie/share
+
 sudo: unknown user: oozie
+
 [root@nn ~]# adduser oozie
+
 [root@nn ~]# sudo -u oozie hadoop fs -put share /user/oozie/share
+
 put: `share': No such file or directory
+
 [root@nn ~]#
+
 [root@nn ~]#
+
 [root@nn ~]# sudo -u oozie hadoop fs -put /root/share /user/oozie/share
+
 put: `/root/share': No such file or directory
+
 [root@nn ~]# pwd
+
 /root
+
 [root@nn ~]# ls -l
+
 total 82396
--rw-------. 1 root root     1113 Sep 15 16:09 anaconda-ks.cfg
--rw-r--r--. 1 root root    10602 Sep 15 16:09 install.log
--rw-r--r--. 1 root root     3824 Sep 15 16:08 install.log.syslog
--rwxr-xr-x. 1 root root 84348098 Oct  5 18:52 oozie-sharelib.tar.gz
-drwxr-xr-x. 3 1106  592     4096 Nov 18  2014 share
+
+-rw-------. 1 root root 1113 Sep 15 16:09 anaconda-ks.cfg
+
+-rw-r--r--. 1 root root 10602 Sep 15 16:09 install.log
+
+-rw-r--r--. 1 root root 3824 Sep 15 16:08 install.log.syslog
+
+-rwxr-xr-x. 1 root root 84348098 Oct 5 18:52 oozie-sharelib.tar.gz
+
+drwxr-xr-x. 3 1106 592 4096 Nov 18 2014 share
+
 [root@nn ~]#
+
 [root@nn ~]# chown root:root share
+
 [root@nn ~]# ls -l
+
 total 82396
--rw-------. 1 root root     1113 Sep 15 16:09 anaconda-ks.cfg
--rw-r--r--. 1 root root    10602 Sep 15 16:09 install.log
--rw-r--r--. 1 root root     3824 Sep 15 16:08 install.log.syslog
--rwxr-xr-x. 1 root root 84348098 Oct  5 18:52 oozie-sharelib.tar.gz
-drwxr-xr-x. 3 root root     4096 Nov 18  2014 share
+
+-rw-------. 1 root root 1113 Sep 15 16:09 anaconda-ks.cfg
+
+-rw-r--r--. 1 root root 10602 Sep 15 16:09 install.log
+
+-rw-r--r--. 1 root root 3824 Sep 15 16:08 install.log.syslog
+
+-rwxr-xr-x. 1 root root 84348098 Oct 5 18:52 oozie-sharelib.tar.gz
+
+drwxr-xr-x. 3 root root 4096 Nov 18 2014 share
+
 [root@nn ~]#
+
 [root@nn ~]# sudo -u oozie hadoop fs -put /root/share /user/oozie/share
+
 put: `/root/share': No such file or directory
+
 [root@nn ~]# ls -l /root/share
+
 total 4
-drwxr-xr-x. 9 1106 592 4096 Nov 18  2014 lib
+
+drwxr-xr-x. 9 1106 592 4096 Nov 18 2014 lib
+
 [root@nn ~]# sudo -u oozie hadoop fs -put /root/share /user/oozie/
+
 put: `/root/share': No such file or directory
+
 [root@nn ~]# sudo -u oozie ls -l /root/share
+
 ls: cannot access /root/share: Permission denied
+
 [root@nn ~]# mv /root/share /tmp/
+
 [root@nn ~]#
+
 [root@nn ~]# sudo -u oozie hadoop fs -put /tmp/share /user/oozie/share
+
 [root@nn ~]#
 
 
 Configuring Support for Oozie Uber JARs
+
 An uber JAR is a JAR that contains other JARs with dependencies in a lib/ folder inside the JAR. Beginning with CDH4.1, you can configure the cluster to handle uber JARs properly for the MapReduce action (as long as it does not include any streaming or pipes) by setting the following property in the oozie-site.xml file:
+
 ...
-    <property>
-        <name>oozie.action.mapreduce.uber.jar.enable</name>
-    <value>true</value>
-    ...
+
+<property>
+
+<name>oozie.action.mapreduce.uber.jar.enable</name>
+
+<value>true</value>
+
+...
+
 When this property is set, users can use the oozie.mapreduce.uber.jar configuration property in their MapReduce workflows to notify Oozie that the specified JAR file is an uber JAR.
 
-  Configuring Oozie to Run against a Federated Cluster
+
+
+Configuring Oozie to Run against a Federated Cluster
+
 To run Oozie against a federated HDFS cluster using ViewFS, configure the oozie.service.HadoopAccessorService.supported.filesystems property in oozie-site.xml as follows:
 
 <property>
-     <name>oozie.service.HadoopAccessorService.supported.filesystems</name>
-     <value>hdfs,viewfs</value>
+
+<name>oozie.service.HadoopAccessorService.supported.filesystems</name>
+
+<value>hdfs,viewfs</value>
+
 </property>
+
+
 
 Starting the Oozie Server
 
 [root@hiveserver2-metastore oozie]# sudo service oozie start
 
-Setting OOZIE_HOME:          /usr/lib/oozie
-Sourcing:                    /usr/lib/oozie/bin/oozie-env.sh
-  setting OOZIE_CONFIG=/etc/oozie/conf
+Setting OOZIE_HOME: /usr/lib/oozie
+
+Sourcing: /usr/lib/oozie/bin/oozie-env.sh
+
+setting OOZIE_CONFIG=/etc/oozie/conf
+
 Accessing the Oozie Server with the Oozie Client
 
-[root@hiveserver2-metastore oozie]# oozie admin -oozie http://hiveserver2-metastore.datadeity.net:11000/oozie -status
-System mode: NORMAL
-[root@hiveserver2-metastore oozie]#
+[root@hiveserver2-metastore oozie]# oozie admin -oozie http://hiveserver2-metastore.mydomain.net:11000/oozie -status
 
+System mode: NORMAL
+
+[root@hiveserver2-metastore oozie]#
 
 
 TO Enable web console 
 
 [root@hiveserver2-metastore oozie]# cd /var/lib/oozie/
+
 [root@hiveserver2-metastore oozie]# unzip ext-2.2.zip
+
+
 
 Accessing the Oozie Server with a Browser
 If you have enabled the Oozie web console by adding the ExtJS library, you can connect to the the console at http://<OOZIE_HOSTNAME>:11000/oozie.
 
-  Note:
+Note:
 If the Oozie server is configured to use Kerberos HTTP SPNEGO Authentication, you must use a web browser that supports Kerberos HTTP SPNEGO (for example, Firefox or Internet Explorer).
 
 INSTALL OOZIE CLIENT on client node
 
 sudo yum install oozie-client
 
-on client as well
+on client 
 
-[root@client ~]# oozie admin -oozie http://hiveserver2-metastore.datadeity.net:11000/oozie -status
+[root@client ~]# oozie admin -oozie http://hiveserver2-metastore.mydomain.net:11000/oozie -status
+
 System mode: NORMAL
+
 [root@client ~] 
