@@ -1,0 +1,140 @@
+You first have to create local repo or use cloudera repo for yum installation
+
+ sudo yum clean all; sudo yum install hadoop-0.20-mapreduce-jobtracker
+ sudo yum clean all; sudo yum install hadoop-hdfs-namenode
+sudo yum clean all; sudo yum install hadoop-hdfs-secondarynamenode
+sudo yum clean all; sudo yum install hadoop-0.20-mapreduce-tasktracker hadoop-hdfs-datanode
+sudo yum clean all; sudo yum install hadoop-client
+
+Sample Configuration
+core-site.xml: form hdfs://<namenode host>:<namenode port>/.
+<property>
+<name>fs.defaultFS</name>
+<value>hdfs://repo-kerberos-snn.mydomain.net/</value>
+</property>
+
+hdfs-site.xml:
+<property>
+<name>dfs.permissions.superusergroup</name>
+<value>hadoop</value>
+</property>
+
+Configuring Local Storage Directories
+You need to specify, create, and assign the correct permissions to the local directories where you want the HDFS daemons to store data. You specify the directories by configuring the following two properties in the hdfs-site.xml file.
+<property>
+<name>dfs.namenode.name.dir</name>
+<value>file:///data/1/dfs/nn,/data/2/dfs/nn</value>
+</property>
+<property>
+<name>dfs.datanode.data.dir</name>
+<value>file:///data/1/dfs/dn,/data/2/dfs/dn</value>
+</property>
+<property>
+On a NameNode host: create the dfs.name.dir or dfs.namenode.name.dir local directories:
+[root@repo-kerberos-snn conf]# sudo mkdir -p /data/1/dfs/nn /data/2/dfs/nn
+[root@repo-kerberos-snn conf]#
+On all DataNode hosts: create the dfs.data.dir or dfs.datanode.data.dir local directories:
+[root@repo-kerberos-snn conf]# sudo mkdir -p /data/1/dfs/dn /data/2/dfs/dn
+[root@repo-kerberos-snn conf]# sudo chown -R hdfs:hdfs /data/1/dfs/nn /data/2/dfs/nn /data/1/dfs/dn /data/2/dfs/dn
+[root@repo-kerberos-snn conf]#
+[root@repo-kerberos-snn conf]# sudo chmod 700 /data/1/dfs/nn /data/2/dfs/nn /data/1/dfs/dn /data/2/dfs/dn
+
+Formatting the NameNode
+Before starting the NameNode for the first time you need to format the file system.Make sure you format the NameNode as user hdfs. If you are re-formatting the NameNode, keep in mind that this invalidates the DataNode storage locations, so you should remove the data under those locations after the NameNode is formatted.
+[root@repo-kerberos-snn conf]# sudo -u hdfs hdfs namenode -format
+Error: JAVA_HOME is not set and could not be found.
+[root@repo-kerberos-snn conf]#
+Insert below two lines in /etc/hadoop.conf/hadoop-env.sh  file
+export JAVA_HOME=/usr/local/java/current
+export PATH=$PATH:$JAVA_HOME/bin
+Configuring the Secondary NameNode
+Add the name of the machine that will run the Secondary NameNode to the conf/masters file.
+Add the following property to the hdfs-site.xml file:
+<property>
+<name>dfs.namenode.http-address</name>
+<value>repo-kerberos-snn.mydomain.net:50070</value>
+<description>
+The address and the base port on which the dfs NameNode Web UI will listen.
+</description>
+</property>
+Trash is configured with the following properties in the core-site.xml file:
+<property>
+<name>fs.trash.interval</name>
+<value>1440</value>
+</property>
+
+To enable WebHDFS:
+Set the following property in hdfs-site.xml:
+<property>
+<name>dfs.webhdfs.enabled</name>
+<value>true</value>
+</property>
+Configuring Properties for MRv1 Clusters
+set property in mapred-site.xml
+<property>
+<name>mapred.job.tracker</name>
+<value>repo-kerberos-snn.mydomain.net:8021</value>
+</property>
+Configure Local Storage Directories for Use by MRv1 Daemons
+mapred-site.xml on each task tracker
+<property>
+<name>mapred.local.dir</name>
+<value>/data/1/mapred/local,/data/2/mapred/local</value>
+</property>
+
+sudo mkdir -p /data/1/mapred/local /data/2/mapred/local
+sudo chown -R mapred:hadoop /data/1/mapred/local /data/2/mapred/local
+Enabling JobTracker Recovery
+By default JobTracker recovery is off, but you can enable it by setting the property mapreduce.jobtracker.restart.recover to true in mapred-site.xml.
+<property>
+<name>mapreduce.jobtracker.restart.recover</name>
+<value>true</value>
+</property>
+Start hdfs on every node:
+[root@repo-kerberos-snn conf]# for x in `cd /etc/init.d ; ls hadoop-hdfs-*` ; do sudo service $x start ; done
+Starting Hadoop datanode:
+Create the HDFS /tmp Directory:If you do not create /tmp properly, with the right permissions as shown below, you may have problems with CDH components later. Specifically, if you don't create /tmp yourself, another process may create it automatically with restrictive permissions that will prevent your other applications from using it.
+[root@repo-kerberos-snn conf]# sudo -u hdfs hadoop fs -mkdir /tmp
+[root@repo-kerberos-snn conf]# sudo -u hdfs hadoop fs -chmod -R 1777 /tmp
+[root@repo-kerberos-snn conf]#
+Create MapReduce /var directories
+sudo -u hdfs hadoop fs -mkdir -p /var/lib/hadoop-hdfs/cache/mapred/mapred/staging
+sudo -u hdfs hadoop fs -chmod 1777 /var/lib/hadoop-hdfs/cache/mapred/mapred/staging
+sudo -u hdfs hadoop fs -chown -R mapred /var/lib/hadoop-hdfs/cache/mapred
+Verify the HDFS File Structure
+[root@repo-kerberos-snn conf]# sudo -u hdfs hadoop fs -ls -R /
+drwxrwxrwt - hdfs hadoop 0 2015-10-11 19:44 /tmp
+drwxr-xr-x - hdfs hadoop 0 2015-10-11 19:47 /var
+drwxr-xr-x - hdfs hadoop 0 2015-10-11 19:47 /var/lib
+drwxr-xr-x - hdfs hadoop 0 2015-10-11 19:47 /var/lib/hadoop-hdfs
+drwxr-xr-x - hdfs hadoop 0 2015-10-11 19:47 /var/lib/hadoop-hdfs/cache
+drwxr-xr-x - mapred hadoop 0 2015-10-11 19:47 /var/lib/hadoop-hdfs/cache/mapred
+drwxr-xr-x - mapred hadoop 0 2015-10-11 19:47 /var/lib/hadoop-hdfs/cache/mapred/mapred
+drwxrwxrwt - mapred hadoop 0 2015-10-11 19:47 /var/lib/hadoop-hdfs/cache/mapred/mapred/staging
+Create and Configure the mapred.system.dir Directory in HDFS
+After you start HDFS and create /tmp, but before you start the JobTracker (see the next step), you must also create the HDFS directory specified by the mapred.system.dir parameter (by default ${hadoop.tmp.dir}/mapred/system and configure it to be owned by the mapred user.If you create the mapred.system.dir directory in a different location, specify that path in the conf/mapred-site.xml file.
+To create the directory in its default location:
+$ sudo -u hdfs hadoop fs -mkdir /tmp/mapred/system
+$ sudo -u hdfs hadoop fs -chown mapred:hadoop /tmp/mapred/system
+Start MapReduce; To start MapReduce, start the TaskTracker and JobTracker services
+On each TaskTracker system:
+$ sudo service hadoop-0.20-mapreduce-tasktracker start
+On the JobTracker system:
+$ sudo service hadoop-0.20-mapreduce-jobtracker start
+ Create a Home Directory for each MapReduce User Create a home directory for each MapReduce user. It is best to do this on the NameNode; for example:
+[root@repo-kerberos-snn conf]# sudo -u hdfs hadoop fs -mkdir /user/asara
+[root@repo-kerberos-snn conf]# sudo -u hdfs hadoop fs -chown asara /user/asara
+Alternatively, you can log in as each Linux user (or write a script to do so) and create the home directory as follows:
+sudo -u hdfs hadoop fs -mkdir /user/$USER
+sudo -u hdfs hadoop fs -chown $USER /user/$USER
+Configuring init to Start Core Hadoop System Services in an MRv1 Cluster
+On namenode
+sudo chkconfig hadoop-hdfs-namenode on
+On the Secondary NameNode (if used)
+sudo chkconfig hadoop-hdfs-secondarynamenode on
+On each DataNode
+sudo chkconfig hadoop-hdfs-datanode on
+On the JobTracker
+sudo chkconfig hadoop-0.20-mapreduce-jobtracker on 
+On each TaskTracker
+sudo chkconfig hadoop-0.20-mapreduce-tasktracker on
