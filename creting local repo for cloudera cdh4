@@ -1,0 +1,328 @@
+[root@repo-kerberos-snn yum.repos.d]# yum list available|grep -i hadoop
+
+[root@repo-kerberos-snn yum.repos.d]#
+
+[root@repo-kerberos-snn yum.repos.d]# cd /var/www/html/cm/4/repodata/
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# ls -l
+
+total 88
+
+-rwxr-xr-x. 1 apache apache 59198 Sep 9 2013 filelists.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 filelists.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 557 Sep 9 2013 other.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 other.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 3446 Sep 9 2013 primary.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 primary.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 951 Sep 9 2013 repomd.xml
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 repomd.xml.asc
+
+[root@repo-kerberos-snn repodata]# pwd
+
+/var/www/html/cm/4/repodata
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# vi /etc/yum
+
+yum/ yum.conf yum.repos.d/
+
+[root@repo-kerberos-snn repodata]# vi /etc/yum.repos.d/myrepo.repo
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# sudo yum clean all; sudo yum install hadoop-0.20-mapreduce-jobtracker
+
+Loaded plugins: fastestmirror
+
+Cleaning repos: base extras myrepo updates
+
+Cleaning up Everything
+
+Cleaning up list of fastest mirrors
+
+Loaded plugins: fastestmirror
+
+Determining fastest mirrors
+
+* base: mirror.supremebytes.com
+
+* extras: mirror.supremebytes.com
+
+* updates: mirror.supremebytes.com
+
+base | 3.7 kB 00:00
+
+base/primary_db | 4.6 MB 00:00
+
+extras | 3.4 kB 00:00
+
+extras/primary_db | 32 kB 00:00
+
+http://192.168.1.169/cm/4/repodata/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404"
+
+Trying other mirror.
+
+Error: Cannot retrieve repository metadata (repomd.xml) for repository: myrepo. Please verify its path and try again
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# wget http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm
+
+--2015-10-11 17:43:06-- http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm
+
+Resolving archive.cloudera.com... 23.235.47.68
+
+Connecting to archive.cloudera.com|23.235.47.68|:80... connected.
+
+HTTP request sent, awaiting response... 200 OK
+
+Length: 9108 (8.9K) [application/x-redhat-package-manager]
+
+Saving to: “cloudera-cdh-4-0.x86_64.rpm”
+
+
+
+100%[===========================================================================================================================================================>] 9,108 --.-K/s in 0s
+
+
+
+2015-10-11 17:43:06 (327 MB/s) - “cloudera-cdh-4-0.x86_64.rpm” saved [9108/9108]
+
+
+
+[root@repo-kerberos-snn repodata]# ls -l
+
+total 100
+
+-rw-r--r-- 1 root root 9108 Nov 30 2012 cloudera-cdh-4-0.x86_64.rpm
+
+-rwxr-xr-x. 1 apache apache 59198 Sep 9 2013 filelists.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 filelists.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 557 Sep 9 2013 other.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 other.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 3446 Sep 9 2013 primary.xml.gz
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 primary.xml.gz.asc
+
+-rwxr-xr-x. 1 apache apache 951 Sep 9 2013 repomd.xml
+
+-rwxr-xr-x. 1 apache apache 198 Sep 9 2013 repomd.xml.asc
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# mv cloudera-cdh-4-0.x86_64.rpm
+
+mv: missing destination file operand after `cloudera-cdh-4-0.x86_64.rpm'
+
+Try `mv --help' for more information.
+
+[root@repo-kerberos-snn repodata]# mv cloudera-cdh-4-0.x86_64.rpm /root
+
+[root@repo-kerberos-snn repodata]#
+
+[root@repo-kerberos-snn repodata]# cd
+
+[root@repo-kerberos-snn ~]# ls -l
+
+total 214284
+
+-rw-------. 1 root root 1152 Oct 11 12:03 anaconda-ks.cfg
+
+-rw-r--r-- 1 root root 9108 Nov 30 2012 cloudera-cdh-4-0.x86_64.rpm
+
+-rw-r--r--. 1 root root 219392000 Sep 10 2013 cm4.7.1-centos6.tar
+
+-rw-r--r--. 1 root root 10602 Oct 11 12:03 install.log
+
+-rw-r--r--. 1 root root 3824 Oct 11 12:03 install.log.syslog
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# rpm -ivh cloudera-cdh-4-0.x86_64.rpm
+
+Preparing... ########################################### [100%]
+
+1:cloudera-cdh ########################################### [100%]
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# ls -l
+
+total 214284
+
+-rw-------. 1 root root 1152 Oct 11 12:03 anaconda-ks.cfg
+
+-rw-r--r-- 1 root root 9108 Nov 30 2012 cloudera-cdh-4-0.x86_64.rpm
+
+-rw-r--r--. 1 root root 219392000 Sep 10 2013 cm4.7.1-centos6.tar
+
+-rw-r--r--. 1 root root 10602 Oct 11 12:03 install.log
+
+-rw-r--r--. 1 root root 3824 Oct 11 12:03 install.log.syslog
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# cat /etc/yum.repos.d/cloudera-cdh4.repo
+
+[cloudera-cdh4]
+
+name=Cloudera's Distribution for Hadoop, Version 4
+
+baseurl=http://archive.cloudera.com/cdh4/redhat/6/x86_64/cdh/4/
+
+gpgkey = http://archive.cloudera.com/cdh4/redhat/6/x86_64/cdh/RPM-GPG-KEY-cloudera
+
+gpgcheck = 1
+
+
+
+[root@repo-kerberos-snn ~]# ls -l /var/www/html/cdh/4/RPMS/x86_64
+
+ls: cannot access /var/www/html/cdh/4/RPMS/x86_64: No such file or directory
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# mkdir -p /var/www/html/cdh/4/RPMS/x86_64
+
+[root@repo-kerberos-snn ~]# ls -l
+
+total 214284
+
+-rw-------. 1 root root 1152 Oct 11 12:03 anaconda-ks.cfg
+
+-rw-r--r-- 1 root root 9108 Nov 30 2012 cloudera-cdh-4-0.x86_64.rpm
+
+-rw-r--r--. 1 root root 219392000 Sep 10 2013 cm4.7.1-centos6.tar
+
+-rw-r--r--. 1 root root 10602 Oct 11 12:03 install.log
+
+-rw-r--r--. 1 root root 3824 Oct 11 12:03 install.log.syslog
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# sudo rpm -i cloudera-cdh-4-0.x86_64.rpm
+
+package cloudera-cdh-4-0.x86_64 is already installed
+
+[root@repo-kerberos-snn ~]# sudo rpm --import http://archive.cloudera.com/cdh4/redhat/6/x86_64/cdh/RPM-GPG-KEY-cloudera
+
+[root@repo-kerberos-snn ~]# ls -l
+
+total 214284
+
+-rw-------. 1 root root 1152 Oct 11 12:03 anaconda-ks.cfg
+
+-rw-r--r-- 1 root root 9108 Nov 30 2012 cloudera-cdh-4-0.x86_64.rpm
+
+-rw-r--r--. 1 root root 219392000 Sep 10 2013 cm4.7.1-centos6.tar
+
+-rw-r--r--. 1 root root 10602 Oct 11 12:03 install.log
+
+-rw-r--r--. 1 root root 3824 Oct 11 12:03 install.log.syslog
+
+[root@repo-kerberos-snn ~]# sudo yum install yum-utils createrepo
+
+Loaded plugins: fastestmirror
+
+Loading mirror speeds from cached hostfile
+
+* base: mirror.supremebytes.com
+
+* extras: mirror.supremebytes.com
+
+* updates: mirror.supremebytes.com
+
+cloudera-cdh4 | 951 B 00:00
+
+cloudera-cdh4/primary | 34 kB 00:00
+
+cloudera-cdh4 111/111
+
+http://192.168.1.169/cm/4/repodata/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404"
+
+Trying other mirror.
+
+Error: Cannot retrieve repository metadata (repomd.xml) for repository: myrepo. Please verify its path and try again
+
+[root@repo-kerberos-snn ~]# cd /etc/yum.repos.d/
+
+[root@repo-kerberos-snn yum.repos.d]# ls -l
+
+total 20
+
+-rw-r--r--. 1 root root 1926 Dec 8 2011 CentOS-Base.repo
+
+-rw-r--r--. 1 root root 637 Dec 8 2011 CentOS-Debuginfo.repo
+
+-rw-r--r--. 1 root root 626 Dec 8 2011 CentOS-Media.repo
+
+-rw-r--r-- 1 root root 229 Nov 30 2012 cloudera-cdh4.repo
+
+-rw-r--r-- 1 root root 87 Oct 11 17:41 myrepo.repo
+
+[root@repo-kerberos-snn yum.repos.d]# rm -ef myrepo.repo
+
+rm: invalid option -- 'e'
+
+Try `rm --help' for more information.
+
+[root@repo-kerberos-snn yum.repos.d]# rm -rf myrepo.repo
+
+[root@repo-kerberos-snn yum.repos.d]#
+
+[root@repo-kerberos-snn yum.repos.d]# cd
+
+[root@repo-kerberos-snn ~]#
+
+[root@repo-kerberos-snn ~]# sudo yum install yum-utils createrepo
+
+Loaded plugins: fastestmirror
+
+Loading mirror speeds from cached hostfile
+
+* base: mirror.supremebytes.com
+
+* extras: mirror.supremebytes.com
+
+* updates: mirror.supremebytes.com
+
+updates | 3.4 kB 00:00
+
+updates/primary_db | 1.9 MB 00:00
+
+Setting up Install Process
+
+Resolving Dependencies
+
+
+
+
+On the same computer as in the previous steps, download the yum repository into a temporary location. On Red Hat/CentOS 6, you can use a command such as:
+reposync -r cloudera-cdh4 
+Note:
+cloudera-cdh4 is the name of the repository on your system; the name is usually in square brackets on the first line of the repo file, which in this example is /etc/yum.repos.d/cloudera-cdh4.repo.
+
+Put all the RPMs into a directory served by your web server. For this example, we'll call it /var/www/html/cdh/4/RPMS/noarch/ (or x86_64 or i386 instead of noarch). Make sure you can remotely access the files in the directory you just created (the URL should look like http://<yourwebserver>/cdh/4/RPMS/).
+On your web server, go to /var/www/html/cdh/4/ and type the following command:
+createrepo .
+This will create or update the necessary metadata so yum can understand this new repository (you will see a new directory named repodata).
